@@ -6,6 +6,124 @@ import { PDFDocument, ReaderStats } from '@/types';
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface UsePDFProcessorProps {
+  pdfUrl: string | null;
+  currentPage: number;
+}
+
+interface ProcessedPDFContent {
+  text: string;
+  semanticChunks: { text: string; importance: number }[];
+  conceptMap: { concept: string; relatedConcepts: string[] }[];
+  estimatedReadingTime: number; // in seconds
+}
+
+export const usePDFPageProcessor = ({ pdfUrl, currentPage }: UsePDFProcessorProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processedContent, setProcessedContent] = useState<ProcessedPDFContent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pdfUrl || currentPage <= 0) return;
+
+    const processPDFPage = async () => {
+      setIsProcessing(true);
+      setError(null);
+
+      try {
+        // Load the PDF document
+        const loadingTask = pdfjs.getDocument(pdfUrl);
+        const pdf = await loadingTask.promise;
+
+        // Get the specified page
+        const page = await pdf.getPage(currentPage);
+        
+        // Extract text content
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+
+        // Process semantic chunks (simple implementation - in production would use NLP)
+        const sentences = pageText.match(/[^.!?]+[.!?]+/g) || [];
+        const semanticChunks = sentences.map((sentence, index) => {
+          // For demonstration - would use proper NLP in production
+          // Calculate importance based on sentence length, keyword presence, etc.
+          const importance = Math.min(
+            100, 
+            Math.max(
+              20, 
+              (sentence.length / 20) * (sentence.includes('the') ? 0.8 : 1.2)
+            )
+          );
+          
+          return {
+            text: sentence.trim(),
+            importance
+          };
+        });
+
+        // Generate concept map (simplified implementation)
+        // In production, would use proper NLP for entity extraction and relationship mapping
+        const words = pageText.toLowerCase().split(/\W+/).filter(word => 
+          word.length > 4 && !['about', 'these', 'those', 'their', 'there'].includes(word)
+        );
+        
+        const wordFrequency: Record<string, number> = {};
+        words.forEach(word => {
+          wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+        });
+
+        // Get top concepts
+        const concepts = Object.entries(wordFrequency)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([word]) => word);
+
+        // Create simple relationships between concepts
+        const conceptMap = concepts.map(concept => {
+          // Find related concepts (simple co-occurrence within 5 words)
+          const relatedConcepts = concepts.filter(c => 
+            c !== concept && 
+            pageText.toLowerCase().includes(`${concept} ${c}`) || 
+            pageText.toLowerCase().includes(`${c} ${concept}`)
+          );
+
+          return {
+            concept,
+            relatedConcepts: relatedConcepts.slice(0, 3) // Limit to 3 related concepts
+          };
+        });
+
+        // Calculate estimated reading time
+        // Average adult reading speed: ~250 words per minute
+        const wordCount = pageText.split(/\s+/).length;
+        const estimatedReadingTime = Math.ceil(wordCount / 250) * 60; // in seconds
+
+        setProcessedContent({
+          text: pageText,
+          semanticChunks,
+          conceptMap,
+          estimatedReadingTime
+        });
+      } catch (err) {
+        console.error('Error processing PDF:', err);
+        setError('Failed to process PDF content');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    processPDFPage();
+  }, [pdfUrl, currentPage]);
+
+  return {
+    isProcessing,
+    processedContent,
+    error
+  };
+};
+
+interface UsePDFProcessorProps {
   document: PDFDocument | null;
   onStatsUpdate?: (stats: ReaderStats) => void;
 }
@@ -55,8 +173,8 @@ export const usePDFProcessor = ({
         // Update document info
         const info = {
           pageCount: pdf.numPages,
-          title: metadata.info?.Title || document.title,
-          author: metadata.info?.Author || document.author || 'Unknown',
+          title: (metadata.info as Record<string, any>)?.['Title'] || document.title,
+          author: (metadata.info as Record<string, any>)?.['Author'] || document.author || 'Unknown',
         };
         
         setDocumentInfo(info);
@@ -103,8 +221,8 @@ export const usePDFProcessor = ({
       // Create new PDFDocument
       const newDocument: PDFDocument = {
         id: crypto.randomUUID(),
-        title: metadata.info?.Title || file.name.replace('.pdf', ''),
-        author: metadata.info?.Author || 'Unknown',
+        title: (metadata.info as Record<string, any>)?.Title || file.name.replace('.pdf', ''),
+        author: (metadata.info as Record<string, any>)?.Author || 'Unknown',
         pageCount: pdf.numPages,
         currentPage: 1,
         file: file,

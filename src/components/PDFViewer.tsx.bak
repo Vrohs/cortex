@@ -2,10 +2,11 @@ import { useRef, useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReaderSettings } from '@/contexts/ReaderSettingsContext';
-import { vibratePageTurn } from '@/utils/hapticFeedback';
+import { vibratePageTurn, vibrateChapterBreak } from '@/utils/hapticFeedback';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
+// Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PDFViewerProps {
@@ -22,15 +23,18 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
   const viewerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Update scale when magnification level changes
   useEffect(() => {
     setScale(settings.magnificationLevel);
   }, [settings.magnificationLevel]);
 
+  // Handle document loading success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setIsLoading(false);
   };
 
+  // Navigate to the next page
   const goToNextPage = () => {
     if (pageNumber < (numPages || 0)) {
       if (settings.isHapticFeedbackEnabled) {
@@ -41,6 +45,7 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
     }
   };
 
+  // Navigate to the previous page
   const goToPrevPage = () => {
     if (pageNumber > 1) {
       if (settings.isHapticFeedbackEnabled) {
@@ -51,6 +56,7 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
     }
   };
 
+  // Calculate text presentation styles based on settings
   const getTextStylesCSS = () => {
     return {
       letterSpacing: `${settings.letterSpacingPercentage * 0.01}em`,
@@ -60,13 +66,22 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
     };
   };
 
+  // Calculate the peripheral darkness gradient
   const getPeripheralDarknessCss = () => {
     if (!settings.isDarknessGradientEnabled) return {};
     
-    const windowSizePercent = settings.lineWindowSize * 5;
+    const darknessLevel = settings.peripheralDarknessLevel / 100;
     
     return {
-      position: 'relative' as const,
+      maskImage: `linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.05),
+        rgba(0, 0, 0, 1) 10%,
+        rgba(0, 0, 0, 1) ${50 - settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) ${50 + settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) 90%,
+        rgba(0, 0, 0, 0.05)
+      )`,
       WebkitMaskImage: `linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0.05),
@@ -75,22 +90,34 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
         rgba(0, 0, 0, 1) ${50 + settings.lineWindowSize * 5}%,
         rgba(0, 0, 0, 1) 90%,
         rgba(0, 0, 0, 0.05)
-      )`
+      )`,
     };
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        goToNextPage();
-      } else if (e.key === 'ArrowLeft') {
-        goToPrevPage();
-      }
+        rgba(0, 0, 0, 0.05),
+        rgba(0, 0, 0, 1) 10%,
+        rgba(0, 0, 0, 1) ${50 - settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) ${50 + settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) 90%,
+        rgba(0, 0, 0, 0.05)
+      )`,
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pageNumber, numPages]);
+  };
+        rgba(0, 0, 0, 1) ${50 - settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) ${50 + settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) 90%,
+        rgba(0, 0, 0, 0.05)
+      )`,
+      WebkitMaskImage: `linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.05),
+        rgba(0, 0, 0, 1) 10%,
+        rgba(0, 0, 0, 1) ${50 - settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) ${50 + settings.lineWindowSize * 5}%,
+        rgba(0, 0, 0, 1) 90%,
+        rgba(0, 0, 0, 0.05)
+      )`,
+    };
+  };
 
   return (
     <div
@@ -103,40 +130,26 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
         transition: `transform ${settings.scrollAnimationDuration}ms ease-out`,
       }}
     >
+      {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900">
-          <div className="loader"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
       )}
 
+      {/* Horizontal stabilizer bar (15% width) */}
       {settings.isStabilizerBarEnabled && (
-        <div
-          className="absolute left-1/2 h-0.5 bg-blue-500 z-10"
-          style={{
+        <div 
+          className="absolute left-1/2 h-0.5 bg-blue-500 opacity-30 z-10"
+          style={{ 
             width: '15%', 
             transform: 'translateX(-50%)',
-            top: '50%',
-            opacity: 0.5,
-            backgroundColor: settings.isDarkMode ? '#3B82F6' : '#1D4ED8',
-          }}
-        ></div>
-      )}
-      
-      {settings.isDarknessGradientEnabled && (
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background: `linear-gradient(
-              to bottom,
-              rgba(0, 0, 0, ${settings.peripheralDarknessLevel / 100}) 0%,
-              rgba(0, 0, 0, 0) ${50 - settings.lineWindowSize * 5}%,
-              rgba(0, 0, 0, 0) ${50 + settings.lineWindowSize * 5}%,
-              rgba(0, 0, 0, ${settings.peripheralDarknessLevel / 100}) 100%
-            )`,
+            top: 'calc(50% - 1px)',
           }}
         ></div>
       )}
 
+      {/* PDF Document */}
       <AnimatePresence mode="wait">
         <motion.div
           key={pageNumber}
@@ -147,22 +160,25 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
           className="flex justify-center"
           style={getPeripheralDarknessCss()}
         >
-      <Document
-        file={pdfUrl}
-        onLoadSuccess={onDocumentLoadSuccess}
-        loading={<div className="text-center py-10">Loading PDF...</div>}
-        error={<div className="text-center py-10 text-red-500">Failed to load PDF</div>}
-        className="pdf-document"
-      >
-        <Page 
-          pageNumber={pageNumber} 
-          renderTextLayer={true}
-          renderAnnotationLayer={true}
-        />
-      </Document>
+          <Document
+            file={pdfUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={<div className="text-center py-10">Loading PDF...</div>}
+            error={<div className="text-center py-10 text-red-500">Failed to load PDF</div>}
+            className="pdf-document"
+          >
+            <Page
+              pageNumber={pageNumber}
+              width={viewerRef.current?.clientWidth || 600}
+              renderTextLayer={true}
+              renderAnnotationLayer={true}
+              className="pdf-page"
+            />
+          </Document>
         </motion.div>
       </AnimatePresence>
 
+      {/* Navigation controls */}
       <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-between bg-opacity-50 bg-gray-900">
         <button
           onClick={goToPrevPage}
@@ -171,7 +187,7 @@ const PDFViewer = ({ pdfUrl, initialPage = 1, onPageChange }: PDFViewerProps) =>
         >
           Previous
         </button>
-        <div className="text-center text-white">
+        <div className="text-center">
           Page {pageNumber} of {numPages}
         </div>
         <button

@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Neurologically Optimized PDF Reader
+
+A next-generation PDF reader built on neurological research principles to enhance reading performance for different cognitive profiles.
+
+## Features
+
+### Core Display Features
+
+- **Dynamic Line Window** (3-7 adjustable lines)
+  - Matches perceptual span (14-15 characters rightward fixation)
+- **Peripheral Darkness Gradient**
+  - Default: 20 cd/m² (80% brightness reduction)
+  - Optional: 40-60% dimming toggle
+- **Smart Magnification**
+  - 1.25-1.5× default (1.3× recommended)
+  - Auto-adjusts based on font characteristics, content density, and user calibration
+
+### Text Presentation
+
+- **Adaptive Spacing System**
+  - Letter spacing: 25-35% of character width
+  - Line spacing: 1.5-2× font height
+- **Contrast Preservation Mode**
+  - Minimum 80% Michelson contrast
+  - Dark mode: #121212 bg / #E6E6E6 text
+
+### Interaction Design
+
+- **Smooth Scrolling Transitions**
+  - 300ms animation duration
+  - Horizontal stabilizer bar (15% width)
+- **Haptic Navigation**
+  - Page turns: Short vibration (100ms)
+  - Chapter breaks: Long pulse (300ms)
+
+### Advanced Features
+
+- **Neural Adaptation Mode**
+  - Progressive text expansion (2-4 weeks)
+  - Weekly performance analytics
+- **Self-Calibration Toolkit**
+  - Fixation stability test
+  - Crowding threshold assessment
+  - Preferred saccade amplitude selector
+
+### Accessibility Presets
+
+- **Low Vision Profile**
+  - 70% magnification boost
+  - Enhanced edge detection
+- **Academic Reading Mode**
+  - Semantic chunk highlighting
+  - Auto-generated concept maps
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Technical Implementation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This application is built with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js (App Router)
+- React PDF for document rendering
+- Framer Motion for smooth transitions
+- TailwindCSS for styling
 
-## Learn More
+## Research Background
 
-To learn more about Next.js, take a look at the following resources:
+Each feature is grounded in specific visual processing research, such as:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Peripheral darkness gradient based on superior colliculus activation studies
+- Adaptive spacing derived from crowding radius research (0.5× eccentricity rule)
+- Neural adaptation based on dorsal-ventral stream connectivity research

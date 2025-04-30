@@ -6,7 +6,11 @@ import PDFViewer from '@/components/PDFViewer';
 import SettingsPanel from '@/components/SettingsPanel';
 import FileUpload from '@/components/FileUpload';
 import DocumentLibrary from '@/components/DocumentLibrary';
-import { PDFDocument, ReaderStats } from '@/types';
+import SemanticAnalysis from '@/components/SemanticAnalysis';
+import CalibrationPanel from '@/components/CalibrationPanel';
+import NeuralAdaptationProgress from '@/components/NeuralAdaptationProgress';
+import { useNeuralAdaptation } from '@/hooks/useNeuralAdaptation';
+import { PDFDocument, ReaderStats, CalibrationResult } from '@/types';
 
 // Sample PDFs for testing
 const samplePdfs = [
@@ -23,6 +27,8 @@ const samplePdfs = [
 const MainLayout = () => {
   const { settings } = useReaderSettings();
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [isCalibrationPanelOpen, setIsCalibrationPanelOpen] = useState(false);
+  const [isSemanticAnalysisOpen, setIsSemanticAnalysisOpen] = useState(false);
   const [documents, setDocuments] = useState<PDFDocument[]>([]);
   const [currentDocument, setCurrentDocument] = useState<PDFDocument | null>(null);
   const [readerStats, setReaderStats] = useState<ReaderStats>({
@@ -30,6 +36,12 @@ const MainLayout = () => {
     readingTime: 0,
     completionPercentage: 0,
     pagesRead: 0,
+  });
+  
+  // Neural adaptation tracking
+  const { adaptationProgress, daysRemaining } = useNeuralAdaptation({
+    settings,
+    updateSettings: () => {}, // We'll use the context directly
   });
   
   // Load documents from localStorage on client-side
@@ -95,6 +107,10 @@ const MainLayout = () => {
     }
   };
   
+  function handleCalibrationComplete(result: CalibrationResult): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div 
       className="min-h-screen flex flex-col"
@@ -141,7 +157,7 @@ const MainLayout = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* PDF Viewer */}
-            <div className="lg:col-span-3 h-[80vh] bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="lg:col-span-3 h-[80vh] bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative">
               {typeof currentDocument.file === 'string' ? (
                 <PDFViewer 
                   pdfUrl={currentDocument.file} 
@@ -154,6 +170,31 @@ const MainLayout = () => {
                   initialPage={currentDocument.currentPage}
                   onPageChange={handlePageChange}
                 />
+              )}
+              
+              {/* Semantic Analysis Panel (conditionally rendered if Academic Reading Mode is enabled) */}
+              {settings.isAcademicReadingModeEnabled && (
+                <SemanticAnalysis 
+                  pdfUrl={typeof currentDocument.file === 'string' 
+                    ? currentDocument.file 
+                    : URL.createObjectURL(currentDocument.file)
+                  }
+                  currentPage={currentDocument.currentPage}
+                  isVisible={isSemanticAnalysisOpen}
+                />
+              )}
+              
+              {/* Toggle button for Semantic Analysis */}
+              {settings.isAcademicReadingModeEnabled && (
+                <button
+                  onClick={() => setIsSemanticAnalysisOpen(prev => !prev)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  title="Toggle Semantic Analysis"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                </button>
               )}
             </div>
             
@@ -224,6 +265,13 @@ const MainLayout = () => {
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
+      />
+      
+      {/* Calibration Panel */}
+      <CalibrationPanel
+        isOpen={isCalibrationPanelOpen}
+        onClose={() => setIsCalibrationPanelOpen(false)}
+        onCalibrationComplete={handleCalibrationComplete}
       />
     </div>
   );

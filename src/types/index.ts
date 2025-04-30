@@ -51,6 +51,12 @@ export interface ReaderStats {
   pagesRead: number;
 }
 
+export interface CalibrationResult {
+  fixationStability: number;
+  crowdingThreshold: number;
+  preferredSaccadeAmplitude: number;
+}
+
 // Self-Calibration Toolkit types
 export interface CalibrationResult {
   fixationStability: number; // 0-100%

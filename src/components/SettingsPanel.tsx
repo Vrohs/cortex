@@ -308,8 +308,11 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     onChange={(e) => {
                       const value = e.target.checked;
                       handleChange('isNeuralAdaptationEnabled', value);
+                      
+                      // Set adaptation start date if enabling and no date set previously
                       if (value && !tempSettings.adaptationStartDate) {
-                        handleChange('adaptationStartDate', new Date());
+                        const today = new Date();
+                        handleChange('adaptationStartDate', today);
                       }
                     }}
                     className="sr-only peer"
@@ -318,9 +321,47 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 </label>
               </div>
               {tempSettings.isNeuralAdaptationEnabled && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Progressive text expansion over 2-4 weeks
-                </p>
+                <>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Progressive text expansion over 2-4 weeks to strengthen dorsal-ventral stream connectivity.
+                    The system will gradually adapt text presentation to your neural reading capacity.
+                  </p>
+                  
+                  {tempSettings.adaptationStartDate && (
+                    <div className="mt-3">
+                      <p className="text-xs text-gray-500 mb-1">Adaptation Progress</p>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                        {/* Calculate progress based on start date */}
+                        {(() => {
+                          const startDate = new Date(tempSettings.adaptationStartDate);
+                          const currentDate = new Date();
+                          const daysSinceStart = Math.floor(
+                            (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+                          );
+                          const adaptationPeriod = 28; // 4 weeks
+                          const progress = Math.min(100, (daysSinceStart / adaptationPeriod) * 100);
+                          return (
+                            <div 
+                              className="bg-green-500 h-2.5 rounded-full" 
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          );
+                        })()}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-gray-500 mt-1">
+                          Started {new Date(tempSettings.adaptationStartDate).toLocaleDateString()}
+                        </p>
+                        <button
+                          onClick={() => handleChange('adaptationStartDate', new Date())}
+                          className="text-xs text-blue-500 hover:text-blue-700"
+                        >
+                          Reset Progress
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
