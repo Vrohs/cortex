@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#121212" rx="100" ry="100"/>
+  <path d="M128,160 L384,160 L384,176 L128,176 Z" fill="#E6E6E6"/>
+  <path d="M128,208 L384,208 L384,224 L128,224 Z" fill="#E6E6E6"/>
+  <path d="M128,256 L384,256 L384,272 L128,272 Z" fill="#E6E6E6"/>
+  <path d="M128,304 L384,304 L384,320 L128,320 Z" fill="#E6E6E6"/>
+  <path d="M128,352 L304,352 L304,368 L128,368 Z" fill="#E6E6E6"/>
+  
+  <!-- Dynamic line window highlight -->
+  <rect x="112" y="240" width="288" height="48" fill="#3B82F6" opacity="0.2" rx="8" ry="8"/>
+  
+  <!-- Focus point -->
+  <circle cx="256" cy="256" r="8" fill="#3B82F6"/>
+  
+  <!-- Magnifying glass -->
+  <circle cx="368" cy="144" r="24" fill="none" stroke="#3B82F6" stroke-width="8"/>
+  <path d="M384,160 L408,184" stroke="#3B82F6" stroke-width="8" stroke-linecap="round"/>
+</svg>
