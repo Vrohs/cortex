@@ -49,21 +49,30 @@ type ReaderSettingsContextType = {
 const ReaderSettingsContext = createContext<ReaderSettingsContextType | undefined>(undefined);
 
 export const ReaderSettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<ReaderSettings>(() => {
-    // Try to load settings from localStorage on client-side
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('readerSettings');
-      return savedSettings ? JSON.parse(savedSettings) : defaultSettings;
-    }
-    return defaultSettings;
-  });
+  const [settings, setSettings] = useState<ReaderSettings>(defaultSettings);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Save settings to localStorage when they change
+  // Handle hydration
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsHydrated(true);
+  }, []);
+
+  // Load settings from localStorage only after hydration
+  useEffect(() => {
+    if (isHydrated) {
+      const savedSettings = localStorage.getItem('readerSettings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
+      }
+    }
+  }, [isHydrated]);
+
+  // Save settings to localStorage when they change (only after hydration)
+  useEffect(() => {
+    if (isHydrated) {
       localStorage.setItem('readerSettings', JSON.stringify(settings));
     }
-  }, [settings]);
+  }, [settings, isHydrated]);
 
   const updateSettings = (newSettings: Partial<ReaderSettings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }));

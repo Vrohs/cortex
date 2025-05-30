@@ -33,8 +33,9 @@ const MainLayout = () => {
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [isCalibrationPanelOpen, setIsCalibrationPanelOpen] = useState(false);
   const [isSemanticAnalysisOpen, setIsSemanticAnalysisOpen] = useState(false);
-  const [documents, setDocuments] = useState<PDFDocument[]>([]);
+  const [documents, setDocuments] = useState<PDFDocument[]>(samplePdfs as PDFDocument[]);
   const [currentDocument, setCurrentDocument] = useState<PDFDocument | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [readerStats, setReaderStats] = useState<ReaderStats>({
     wordsPerMinute: 0,
     readingTime: 0,
@@ -48,25 +49,27 @@ const MainLayout = () => {
     updateSettings,
   });
   
-  // Load documents from localStorage on client-side
+  // Handle hydration
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsHydrated(true);
+  }, []);
+  
+  // Load documents from localStorage on client-side only after hydration
+  useEffect(() => {
+    if (isHydrated) {
       const savedDocuments = localStorage.getItem('pdfDocuments');
       if (savedDocuments) {
         setDocuments(JSON.parse(savedDocuments));
-      } else {
-        // Use sample PDFs for first-time users
-        setDocuments(samplePdfs as PDFDocument[]);
       }
     }
-  }, []);
+  }, [isHydrated]);
   
   // Save documents to localStorage when they change
   useEffect(() => {
-    if (typeof window !== 'undefined' && documents.length > 0) {
+    if (isHydrated && documents.length > 0) {
       localStorage.setItem('pdfDocuments', JSON.stringify(documents));
     }
-  }, [documents]);
+  }, [documents, isHydrated]);
   
   // Handle file upload
   const handleFileUpload = (document: PDFDocument) => {
@@ -113,7 +116,7 @@ const MainLayout = () => {
   
   function handleCalibrationComplete(result: CalibrationResult): void {
     // Store calibration results in localStorage for future use
-    if (typeof window !== 'undefined') {
+    if (isHydrated) {
       localStorage.setItem('calibrationResults', JSON.stringify(result));
     }
 
@@ -196,26 +199,26 @@ const MainLayout = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* PDF Viewer */}
             <div className="lg:col-span-3 h-[80vh] bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative">
-              {typeof currentDocument.file === 'string' ? (
+              {currentDocument && typeof currentDocument.file === 'string' ? (
                 <PDFViewer 
                   pdfUrl={currentDocument.file} 
                   initialPage={currentDocument.currentPage}
                   onPageChange={handlePageChange}
                 />
-              ) : (
+              ) : currentDocument && currentDocument.file instanceof File ? (
                 <PDFViewer 
                   pdfUrl={URL.createObjectURL(currentDocument.file)} 
                   initialPage={currentDocument.currentPage}
                   onPageChange={handlePageChange}
                 />
-              )}
+              ) : null}
               
               {/* Semantic Analysis Panel (conditionally rendered if Academic Reading Mode is enabled) */}
-              {settings.isAcademicReadingModeEnabled && (
+              {settings.isAcademicReadingModeEnabled && currentDocument && (
                 <SemanticAnalysis 
                   pdfUrl={typeof currentDocument.file === 'string' 
                     ? currentDocument.file 
-                    : URL.createObjectURL(currentDocument.file)
+                    : currentDocument.file instanceof File ? URL.createObjectURL(currentDocument.file) : ''
                   }
                   currentPage={currentDocument.currentPage}
                   isVisible={isSemanticAnalysisOpen}

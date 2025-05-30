@@ -40,8 +40,8 @@ export const configurePDFWorker = () => {
   setWorker(0);
 
   // Enhanced error handling for version mismatches
-  const originalConsoleError = console.error;
-  console.error = function(...args) {
+  const originalConsoleError = console.error as (...args: any[]) => void;
+  console.error = (...args: any[]) => {
     const message = args.join(' ');
     
     // Check for version mismatch or worker loading errors
@@ -62,7 +62,7 @@ export const configurePDFWorker = () => {
     }
     
     // Call original console.error for all other messages
-    originalConsoleError.apply(console, args);
+    originalConsoleError(...args);
   };
 
   workerConfigured = true;

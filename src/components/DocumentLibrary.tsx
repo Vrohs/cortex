@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PDFDocument } from '@/types';
 
 interface DocumentLibraryProps {
@@ -13,6 +13,11 @@ const DocumentLibrary = ({
   onDocumentDelete 
 }: DocumentLibraryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
   
   const filteredDocuments = documents.filter(doc => 
     doc.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -20,11 +25,12 @@ const DocumentLibrary = ({
   
   const formatDate = (date?: Date) => {
     if (!date) return 'Never';
+    if (!isHydrated) return 'Loading...';
     return new Date(date).toLocaleDateString();
   };
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6" suppressHydrationWarning>
       <h2 className="text-xl font-bold mb-4">Your Documents</h2>
       
       {/* Search Bar */}
@@ -32,7 +38,7 @@ const DocumentLibrary = ({
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" suppressHydrationWarning>
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" suppressHydrationWarning/>
             </svg>
           </div>
           <input 
