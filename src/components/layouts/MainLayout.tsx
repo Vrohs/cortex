@@ -11,6 +11,10 @@ import CalibrationPanel from '@/components/CalibrationPanel';
 import NeuralAdaptationProgress from '@/components/NeuralAdaptationProgress';
 import { useNeuralAdaptation } from '@/hooks/useNeuralAdaptation';
 import { PDFDocument, ReaderStats, CalibrationResult } from '@/types';
+import { configurePDFWorker } from '@/lib/pdfWorker';
+
+// Ensure PDF worker is configured early
+configurePDFWorker();
 
 // Sample PDFs for testing
 const samplePdfs = [

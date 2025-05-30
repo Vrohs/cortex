@@ -3,75 +3,12 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReaderSettings } from '@/contexts/ReaderSettingsContext';
 import { vibratePageTurn } from '@/utils/hapticFeedback';
+import { configurePDFWorker } from '@/lib/pdfWorker';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-// Configure PDF.js worker with version-matched fallback system
-if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
-  // Use the exact version that react-pdf uses for compatibility
-  const pdfVersion = pdfjs.version || '4.8.69';
-  
-  const workerSources = [
-    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVersion}/pdf.worker.min.js`,
-    `https://unpkg.com/pdfjs-dist@${pdfVersion}/build/pdf.worker.min.js`,
-    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfVersion}/build/pdf.worker.min.js`,
-    // Fallback to the legacy format
-    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVersion}/pdf.worker.min.js`
-  ];
-  
-  let workerIndex = 0;
-  let hasAttemptedWorker = false;
-  
-  const setWorker = (index: number) => {
-    if (index < workerSources.length) {
-      pdfjs.GlobalWorkerOptions.workerSrc = workerSources[index];
-      console.log(`Setting PDF worker to: ${workerSources[index]} (PDF.js version: ${pdfVersion})`);
-    }
-  };
-  
-  // Set initial worker
-  setWorker(0);
-  
-  // Enhanced error handling for worker failures
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-  
-  // Override console.error to catch worker failures
-  console.error = function(...args) {
-    const message = args.join(' ');
-    if ((message.includes('Setting up fake worker failed') || 
-         message.includes('pdf.worker') || 
-         message.includes('Failed to fetch dynamically imported module') ||
-         message.includes('does not match the Worker version')) &&
-        !hasAttemptedWorker) {
-      
-      hasAttemptedWorker = true;
-      workerIndex++;
-      
-      if (workerIndex < workerSources.length) {
-        setWorker(workerIndex);
-        // Don't reload the page, just try the next source
-        console.log('PDF Worker failed, trying next fallback...');
-        return; // Don't show the error for the first few attempts
-      }
-    }
-    originalConsoleError.apply(console, args);
-  };
-  
-  // Also catch warnings
-  console.warn = function(...args) {
-    const message = args.join(' ');
-    if ((message.includes('pdf.worker') || message.includes('version')) && !hasAttemptedWorker) {
-      hasAttemptedWorker = true;
-      workerIndex++;
-      if (workerIndex < workerSources.length) {
-        setWorker(workerIndex);
-        return;
-      }
-    }
-    originalConsoleWarn.apply(console, args);
-  };
-}
+// Ensure PDF worker is configured
+configurePDFWorker();
 
 interface PDFViewerProps {
   pdfUrl: string;

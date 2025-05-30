@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { pdfjs } from 'react-pdf';
 import { PDFDocument, ReaderStats } from '@/types';
+import { configurePDFWorker } from '@/lib/pdfWorker';
 
-// Configure PDF.js worker - use exact version for compatibility
-if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
-  // Use the exact version that react-pdf uses for compatibility
-  const pdfVersion = pdfjs.version || '4.8.69';
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVersion}/pdf.worker.min.js`;
-  console.log(`PDF Processor using worker version: ${pdfVersion}`);
-}
+// Ensure PDF worker is configured
+configurePDFWorker();
 
 interface UsePDFProcessorProps {
   pdfUrl: string | null;
