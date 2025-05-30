@@ -5,9 +5,10 @@ import { ReaderSettings } from '@/types';
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenCalibration?: () => void;
 }
 
-const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
+const SettingsPanel = ({ isOpen, onClose, onOpenCalibration }: SettingsPanelProps) => {
   const { settings, updateSettings, resetSettings, applyLowVisionProfile, applyAcademicReadingMode } = useReaderSettings();
   const [tempSettings, setTempSettings] = useState<ReaderSettings>(settings);
 
@@ -362,6 +363,27 @@ const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     </div>
                   )}
                 </>
+              )}
+            </div>
+            
+            {/* Self-Calibration Toolkit */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                🔧 Self-Calibration Toolkit
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Test your fixation stability, crowding threshold, and preferred saccade amplitude
+              </p>
+              {onOpenCalibration && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenCalibration();
+                  }}
+                  className="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                >
+                  Start Calibration
+                </button>
               )}
             </div>
           </div>
