@@ -6,13 +6,17 @@ import { vibratePageTurn } from '@/utils/hapticFeedback';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-// Configure PDF.js worker with comprehensive fallback system
+// Configure PDF.js worker with version-matched fallback system
 if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
+  // Use the exact version that react-pdf uses for compatibility
+  const pdfVersion = pdfjs.version || '4.8.69';
+  
   const workerSources = [
-    '/pdfjs/pdf.worker.min.js', // Local worker file first
-    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`,
-    `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`,
-    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVersion}/pdf.worker.min.js`,
+    `https://unpkg.com/pdfjs-dist@${pdfVersion}/build/pdf.worker.min.js`,
+    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfVersion}/build/pdf.worker.min.js`,
+    // Fallback to the legacy format
+    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfVersion}/pdf.worker.min.js`
   ];
   
   let workerIndex = 0;
@@ -21,7 +25,7 @@ if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
   const setWorker = (index: number) => {
     if (index < workerSources.length) {
       pdfjs.GlobalWorkerOptions.workerSrc = workerSources[index];
-      console.log(`Setting PDF worker to: ${workerSources[index]}`);
+      console.log(`Setting PDF worker to: ${workerSources[index]} (PDF.js version: ${pdfVersion})`);
     }
   };
   
@@ -37,7 +41,8 @@ if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
     const message = args.join(' ');
     if ((message.includes('Setting up fake worker failed') || 
          message.includes('pdf.worker') || 
-         message.includes('Failed to fetch dynamically imported module')) &&
+         message.includes('Failed to fetch dynamically imported module') ||
+         message.includes('does not match the Worker version')) &&
         !hasAttemptedWorker) {
       
       hasAttemptedWorker = true;
@@ -45,10 +50,8 @@ if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
       
       if (workerIndex < workerSources.length) {
         setWorker(workerIndex);
-        // Reload the page to apply new worker
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        // Don't reload the page, just try the next source
+        console.log('PDF Worker failed, trying next fallback...');
         return; // Don't show the error for the first few attempts
       }
     }
@@ -58,7 +61,7 @@ if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
   // Also catch warnings
   console.warn = function(...args) {
     const message = args.join(' ');
-    if (message.includes('pdf.worker') && !hasAttemptedWorker) {
+    if ((message.includes('pdf.worker') || message.includes('version')) && !hasAttemptedWorker) {
       hasAttemptedWorker = true;
       workerIndex++;
       if (workerIndex < workerSources.length) {
