@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { pdfjs } from 'react-pdf';
 import { PDFDocument, ReaderStats } from '@/types';
 
-// Ensure PDF.js worker is set
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Configure PDF.js worker - use same approach as PDFViewer
+if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
+  // Use local worker file for better reliability
+  pdfjs.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
+}
 
 interface UsePDFProcessorProps {
   pdfUrl: string | null;

@@ -6,8 +6,69 @@ import { vibratePageTurn } from '@/utils/hapticFeedback';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-// Use unpkg CDN as fallback for PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker with comprehensive fallback system
+if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
+  const workerSources = [
+    '/pdfjs/pdf.worker.min.js', // Local worker file first
+    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`,
+    `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`,
+    `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+  ];
+  
+  let workerIndex = 0;
+  let hasAttemptedWorker = false;
+  
+  const setWorker = (index: number) => {
+    if (index < workerSources.length) {
+      pdfjs.GlobalWorkerOptions.workerSrc = workerSources[index];
+      console.log(`Setting PDF worker to: ${workerSources[index]}`);
+    }
+  };
+  
+  // Set initial worker
+  setWorker(0);
+  
+  // Enhanced error handling for worker failures
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  
+  // Override console.error to catch worker failures
+  console.error = function(...args) {
+    const message = args.join(' ');
+    if ((message.includes('Setting up fake worker failed') || 
+         message.includes('pdf.worker') || 
+         message.includes('Failed to fetch dynamically imported module')) &&
+        !hasAttemptedWorker) {
+      
+      hasAttemptedWorker = true;
+      workerIndex++;
+      
+      if (workerIndex < workerSources.length) {
+        setWorker(workerIndex);
+        // Reload the page to apply new worker
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+        return; // Don't show the error for the first few attempts
+      }
+    }
+    originalConsoleError.apply(console, args);
+  };
+  
+  // Also catch warnings
+  console.warn = function(...args) {
+    const message = args.join(' ');
+    if (message.includes('pdf.worker') && !hasAttemptedWorker) {
+      hasAttemptedWorker = true;
+      workerIndex++;
+      if (workerIndex < workerSources.length) {
+        setWorker(workerIndex);
+        return;
+      }
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+}
 
 interface PDFViewerProps {
   pdfUrl: string;
