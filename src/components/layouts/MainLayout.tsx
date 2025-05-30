@@ -167,7 +167,7 @@ const MainLayout = () => {
             onClick={() => setIsSettingsPanelOpen(true)}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" suppressHydrationWarning>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
@@ -229,17 +229,15 @@ const MainLayout = () => {
                   className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                   title="Toggle Semantic Analysis"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" suppressHydrationWarning>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                   </svg>
                 </button>
               )}
             </div>
-            
-            {/* Sidebar */}
+      
             <div className="space-y-8">
-              {/* Document Info */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h2 className="text-xl font-bold mb-4">Document Info</h2>
                 <div className="space-y-3">
                   <div>
@@ -287,12 +285,12 @@ const MainLayout = () => {
                 </div>
               </div>
               
-              {/* Neural Adaptation Progress */}
+              
               {settings.isNeuralAdaptationEnabled && settings.adaptationStartDate && (
                 <NeuralAdaptationProgress startDate={settings.adaptationStartDate} />
               )}
               
-              {/* Back to Library Button */}
+              
               <button
                 onClick={() => setCurrentDocument(null)}
                 className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors"
@@ -304,14 +302,12 @@ const MainLayout = () => {
         )}
       </main>
       
-      {/* Settings Panel */}
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
         onOpenCalibration={() => setIsCalibrationPanelOpen(true)}
       />
       
-      {/* Calibration Panel */}
       <CalibrationPanel
         isOpen={isCalibrationPanelOpen}
         onClose={() => setIsCalibrationPanelOpen(false)}
